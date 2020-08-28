@@ -34,20 +34,26 @@ function Add-ForgottenVariableKeyHandle {
         $commandAst = $ast.FindAll( {
             $node = $args[0]
             $node -is [System.Management.Automation.Language.CommandAst]
-            }, $true) | Select-Object -First 1 -Last 1
+            }, $true)
             
         #function to get the nouns of the first and last commands in the pipeline
-        function Get-CommandNoun ([System.Management.Automation.Language.CommandAst[]]$commandAst){
+        function Get-CommandNounandVerb ([System.Management.Automation.Language.CommandAst[]]$commandAst){
             foreach ($cmdAst in $commandAst) {
-                    $commandName = $cmdAst.GetCommandName()
+                $commandName = $cmdAst.GetCommandName()
                 if ($commandName){
                     $command = $ExecutionContext.InvokeCommand.GetCommand($CommandName, 'All')
                     if ($command -is [System.Management.Automation.AliasInfo]){
                         $commandName = $command.ResolvedCommandName
-                        $commandName.Split('-')[1]
-                    }
+                        [PSCustomObject]@{
+                            Verb = $commandName.Split('-')[0]
+                            Noun = $commandName.Split('-')[1]
+                        }
+                    } #if alias get full command name
                     else{
-                        $commandName.Split('-')[1]
+                        [PSCustomObject]@{
+                            Verb = $commandName.Split('-')[0]
+                            Noun = $commandName.Split('-')[1]
+                        }
                     }
                 } #if commandName
             } #foreach
@@ -55,16 +61,20 @@ function Add-ForgottenVariableKeyHandle {
     
     
         if ($commandAst){
-            $nounNames = Get-CommandNoun -commandAst $commandAst
-            if ($nounNames.count -eq 1){
-                $VariableName = $nounNames
+            $nounNames = Get-CommandNounandVerb -commandAst $commandAst
+            if (($nounNames | measure).Count -eq 1){
+                $VariableName = "Test"
+                #$VariableName = $nounNames.Noun
             }
-            elseif ($nounNames.Count -eq 2){
-                if ($nounNames[1] -eq "Object"){
-                    $VariableName = $nounNames[0].ToLower() + 'PS' + $nounNames[1]
+            elseif ($nounNames.Count -gt 1){
+                if ($nounNames.Verb -contains "Select"){
+                    $VariableName = $nounNames[0].Noun.ToLower() + "PSObject"
                 } #if the last cmdlet noun is Object
+                elseif (($nounNames | select -Last 1).verb -eq "Where"){
+                    $VariableName = ($nounNames | select -First 1).Noun
+                }
                 else{
-                    $VariableName = $nounNames[1]
+                    $VariableName = ($nounNames | select -Last 1).Noun
                 }
             } #else if 2 commands in the pipeline
 
