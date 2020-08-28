@@ -44,15 +44,31 @@ function Add-ForgottenVariableKeyHandle {
                     $command = $ExecutionContext.InvokeCommand.GetCommand($CommandName, 'All')
                     if ($command -is [System.Management.Automation.AliasInfo]){
                         $commandName = $command.ResolvedCommandName
-                        [PSCustomObject]@{
-                            Verb = $commandName.Split('-')[0]
-                            Noun = $commandName.Split('-')[1]
+                        if ($commandName.Contains('-')){
+                            [PSCustomObject]@{
+                                Verb = $commandName.Split('-')[0]
+                                Noun = $commandName.Split('-')[1]
+                            }
+                        }
+                        else{
+                            [PSCustomObject]@{
+                                Verb = $null
+                                Noun = $commandName
+                            }
                         }
                     } #if alias get full command name
                     else{
-                        [PSCustomObject]@{
-                            Verb = $commandName.Split('-')[0]
-                            Noun = $commandName.Split('-')[1]
+                        if ($commandName.Contains('-')){
+                            [PSCustomObject]@{
+                                Verb = $commandName.Split('-')[0]
+                                Noun = $commandName.Split('-')[1]
+                            }
+                        }
+                        else{
+                            [PSCustomObject]@{
+                                Verb = $null
+                                Noun = $commandName
+                            }
                         }
                     }
                 } #if commandName
@@ -63,8 +79,7 @@ function Add-ForgottenVariableKeyHandle {
         if ($commandAst){
             $nounNames = Get-CommandNounandVerb -commandAst $commandAst
             if (($nounNames | measure).Count -eq 1){
-                $VariableName = "Test"
-                #$VariableName = $nounNames.Noun
+                $VariableName = $nounNames.Noun
             }
             elseif ($nounNames.Count -gt 1){
                 if ($nounNames.Verb -contains "Select"){
