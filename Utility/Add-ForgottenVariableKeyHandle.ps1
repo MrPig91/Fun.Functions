@@ -30,7 +30,23 @@ function Add-ForgottenVariableKeyHandle {
         $line = $null
         $cursor = $null
         [Microsoft.PowerShell.PSConsoleReadLine]::GetBufferState([ref]$line, [ref]$cursor)
-    
+
+        #Check to see if the line starts with a variable, if so toggle between singular and plural nouns and exit the function
+        if ($line.StartsWith('$') -and ($line.Contains('='))){
+            $variableName = $line.Split(' ')[0].Replace('$','')
+            $newLine = $line.Split('=')[1].TrimStart()
+            if ($PluralService.IsSingular($variableName)){
+                $variableName = $PluralService.Pluralize($variableName)
+            }
+            else{
+                $variableName = $PluralService.Singularize($variableName)
+            }
+            $variableName = '$' + $variableName + " "
+            [Microsoft.PowerShell.PSConsoleReadLine]::Replace(0, $line.Length, $variableName + "= " + $newline)
+            [Microsoft.PowerShell.PSConsoleReadLine]::EndOfLine()
+            return
+        }
+
         $commandAst = $ast.FindAll( {
             $node = $args[0]
             $node -is [System.Management.Automation.Language.CommandAst]
