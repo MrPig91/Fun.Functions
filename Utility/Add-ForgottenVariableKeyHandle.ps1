@@ -102,7 +102,7 @@ function Add-ForgottenVariableKeyHandle {
                     $VariableName = $nounNames[0].Noun.ToLower() + "PSObject"
                 } #if the last cmdlet noun is Object
                 elseif (($nounNames | select -Last 1).verb -eq "Where"){
-                    $VariableName = ($nounNames | select -First 1).Noun
+                    $VariableName = ($nounNames | select -Last 2)[0].Noun
                 }
                 else{
                     $VariableName = ($nounNames | select -Last 1).Noun
