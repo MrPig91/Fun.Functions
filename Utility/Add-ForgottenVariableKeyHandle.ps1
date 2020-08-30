@@ -33,8 +33,8 @@ function Add-ForgottenVariableKeyHandle {
 
         #Check to see if the line starts with a variable, if so toggle between singular and plural nouns and exit the function
         if ($line.StartsWith('$') -and ($line.Contains('='))){
-            $variableName = $line.Split(' ')[0].Replace('$','')
-            $newLine = $line.Split('=')[1].TrimStart()
+            $variableName = $line.Split('=',2)[0].Replace('$','').TrimEnd()
+            $newLine = $line.Split('=',2)[1].TrimStart()
             if ($PluralService.IsSingular($variableName)){
                 $variableName = $PluralService.Pluralize($variableName)
             }
